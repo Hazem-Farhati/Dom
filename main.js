@@ -1,146 +1,100 @@
-let shops = document.querySelectorAll('.add-shop');
-
-let products = [
-    {
-    name: 'Climatiseur' ,
-    prix: 700 ,
-    inShop :  0 
-   },
-   {
-    name: 'smartv' ,
-    prix: 500 ,
-    inShop :  0 
-
-   },
-   {
-    name: 'machin' ,
-    prix: 900 ,
-    inShop :  0 
-
-   },
+var add_to_cart_btns = document.getElementsByClassName('add-shop')
+var main_container = document.getElementsByTagName('tbody')[0]
+var quantity_fields = document.getElementsByClassName('num')
+var removeBtns = document.getElementsByClassName('uk-button-danger')
+var el = document.querySelectorAll('ion-icon')
 
 
-
-];
-for(let i=0; i<shops.length;i++){
-    shops[i].addEventListener('click',() => {
-        shopNumbers(products[i]);
-        totalCost(products[i])
-    })
+for (var i = 0 ; i<add_to_cart_btns.length;i++){
+    add_to_cart_btns[i].addEventListener('click',addToCart)
 }
-    function onLoadShopNumbers(){
-    let productNumbers = localStorage.getItem('shopNumbers');
-    if(productNumbers){
-        document.querySelector('.shop span').textContent= productNumbers;
+
+function addToCart(event){
+    var btn = event.target
+    btnGrandparent = btn.parentElement.parentElement;
+
+    var itemName = btnGrandparent.children[2].innerText
+    var itemPrice = btnGrandparent.children[4].innerText
+    var itemImage = btnGrandparent.children[0].children[0].src
+
+    var itemContainer = document.createElement('tr')
+    itemContainer.innerHTML = ` <table> <td><input class="uk-checkbox" type="checkbox"></td>
+    <td><img class="uk-preserve-width uk-border-circle" src="${itemImage}" width="40" alt=""></td>
+    <td class="uk-table-link">
+        <h3 class = "item-name">${itemName}</h3>
+    </td>
+    <td class="uk-text-truncate item-price"><h3>${itemPrice}</h3></td>
+    <td><input type = 'number' class = 'num' value = '1'></td>
+    <td class="uk-text-truncate total-price"><h3>${itemPrice}</h3></td>
+    <td><button class="uk-button uk-button-danger" type="button">Remove</button></td> </table>`
+
+    main_container.append(itemContainer)
+
+    for (var i = 0 ; i<quantity_fields.length;i++){
+        quantity_fields[i].addEventListener('click',updateTotal)
     }
 }
-function shopNumbers(product){
-    let productNumbers =localStorage.getItem('shopNumbers');
-    productNumbers=parseInt(productNumbers);
- 
-    if(productNumbers){
-        localStorage.setItem('shopNumbers',productNumbers + 1);
-        document.querySelector('.shop span').textContent = productNumbers + 1;
 
-    }
-    else{
-        localStorage.setItem('shopNumbers',1);
-        document.querySelector('.shop span').textContent = 1;
-    }
-
-setItem(product);
-    }
-    function setItem(product){
-        let shopItems= localStorage.getItem('productsInShop');
-        shopItems = JSON.parse(shopItems);
-        if(shopItems != null){
-            if(shopItems[product.name] == undefined){
-                shopItems = {
-                    ...shopItems,
-                    [product.name]:product
-                }
-            }
+    function updateTotal(event){
+        number_of_items = event.target
+        number_of_items_parent =  number_of_items.parentElement.parentElement
+        price_field = number_of_items_parent.getElementsByClassName('item-price')[0]
+        total_field = number_of_items_parent.getElementsByClassName('total-price')[0]
+        price_field_content = price_field.children[0].innerText.replace('$', '')
+        total_field.children[0].innerText = number_of_items.value * price_field_content +' $'
+    
+        if(isNaN(number_of_items.value)|| number_of_items.value <= 0){
+            number_of_items.value = 1
         }
-        else {
-            product.inShop = 1 ; 
-            shopItems = {
-                [product.name]: product
-            }
+
+        
+        for (var i = 0 ; i< removeBtns.length;i++){
+        removeBtns[i].addEventListener('click', removeItem)
         }
-      
-        localStorage.setItem("productsInShop", JSON.stringify
-        (shopItems));
+        grandTotal()
     }
 
-    function totalCost(product){
-        // console.log("the procut price is ",product.prix);
-        localStorage.setItem("totalCost",product.prix);
-        var shopCost= localStorage.getItem('totalCost');
-        console.log("my shopCost is ",shopCost);
-        console.log(typeof shopCost)
-        if(shopCost != null){
-            shopCost = parseInt(shopCost);
-            localStorage.setItem("totalCost",shopCost + product.prix);
+    function grandTotal(){
+        var total = 0
+        var grand_total = document.getElementsByClassName('grand-total')[0]
+        var total_price = document.getElementsByClassName('total-price')
+        for(var i = 0; i < total_price.length; i++){
+            total_price_content = Number(total_price[i].innerText.replace('$', ''))
+            total+=total_price_content
         }
-        else{
-            localStorage.setItem("totalCost",product.prix);
-        }
+        grand_total.children[0].innerText =  total + " $"
+        console.log(total)
     }
 
-    function displayShop(){
-        var shopItems = localStorage.getItem("productsInShop");
-        var shopCost= localStorage.getItem('totalCost');
+    function removeItem(event){
+        remove_btn = event.target
+        remove_btn_grandparent = remove_btn.parentElement.parentElement
+        remove_btn_grandparent.remove()
+        console.log(remove_btn)
+        grandTotal()
+        
+    }
+    
+function changeColor(l) {
 
-        shopItems = JSON.parse(shopItems);
-        var procutContainer = document.querySelector
-        (".product");
-        console.log(shopItems);
-
-        if (shopItems && procutContainer){
-            procutContainer.innerHTML = '' ;
-            Object.values(shopItems).map(item => {
-                procutContainer.innerHTML += `
-                <div class="product">
-            <img src="./image/${item.name}.jpg">
-            <ion-icon name="close-circle-outline"></ion-icon>
-            
-            <div class="price"> ${item.prix},00</div>
-            <div class="quantity">
-            <ion-icon name="caret-back-outline"></ion-icon>
-            <span>${item.inShop}</span>
-            <ion-icon name="caret-forward-outline"></ion-icon>
-            </div>
-
-                <div class="total">
-                ${item.inShop * item.prix},00
-                </div>
-                `;
-               
-                
-            });
-            procutContainer.innerHTML += `
-            <div class="totale_container">
-            <h4 class="basket_totaltitle">
-            basket total </h4>
-            <h4 class="baskettotal">
-            $${shopCost},00
-            </h4>
-            
-            `
-
-        }
+          if (l.style.color == "black") {
+    l.style.color = "red";
+  } else {
+    l.style.color = "black";
+  }
+    
     }
 
-    var el = document.querySelectorAll('ion-icon');
 
- 
+    for (var i = 0 ; i<el.length;i++){
+    el[i].addEventListener('click',(e)=>changeColor(e.target));
 
-      function changeColor() {
-        el.style.color = 'red';
-    }
-    el.addEventListener('click',changeColor());
-
-    displayShop();
-    onLoadShopNumbers();
+   
+     }
   
 
+    
+   
+
+
+   
